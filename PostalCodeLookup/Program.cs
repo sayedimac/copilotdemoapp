@@ -4,7 +4,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddSingleton<IPostalCodeService, PostalCodeService>();
+
+// Try to use Azure Table Storage, fallback to in-memory if not available
+var connectionString = builder.Configuration.GetConnectionString("AzureTableStorage");
+if (!string.IsNullOrEmpty(connectionString) && connectionString != "UseDevelopmentStorage=true")
+{
+    // Use actual Azure Table Storage
+    builder.Services.AddSingleton<IPostalCodeService, PostalCodeService>();
+}
+else
+{
+    // Use in-memory storage for development/demo
+    builder.Services.AddSingleton<IPostalCodeService, InMemoryPostalCodeService>();
+}
 
 var app = builder.Build();
 

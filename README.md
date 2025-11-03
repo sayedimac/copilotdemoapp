@@ -6,13 +6,28 @@ A simple web-based application that interacts with Azure Table Storage to provid
 
 - Real-time postal code search with autocomplete
 - Integration with Azure Table Storage for data persistence
+- In-memory storage fallback for local development/testing
 - Responsive web interface using Bootstrap
 - Sample data pre-loaded for testing (postal codes: 10001, 90210, 60601, 98101)
+
+## Screenshots
+
+**Initial View:**
+
+![Initial View](https://github.com/user-attachments/assets/41f6c707-2cdb-4afa-8908-5bc494c9c3f4)
+
+**Search Results for Postal Code 10001:**
+
+![Results for 10001](https://github.com/user-attachments/assets/df6d7064-4f2e-4aac-b67a-d009fbdcdbd6)
+
+**Search Results for Postal Code 90210:**
+
+![Results for 90210](https://github.com/user-attachments/assets/bad6a259-6662-4d9a-850a-7e8271483b72)
 
 ## Prerequisites
 
 - .NET 8.0 SDK or later
-- Azure Storage Account (or use Azure Storage Emulator/Azurite for local development)
+- Azure Storage Account (optional - app works with in-memory storage by default)
 
 ## Getting Started
 
@@ -22,11 +37,12 @@ git clone https://github.com/sayedimac/copilotdemoapp.git
 cd copilotdemoapp
 ```
 
-### 2. Configure Azure Table Storage
+### 2. Configure Azure Table Storage (Optional)
 
-For local development, the app is configured to use the Azure Storage Emulator by default (`UseDevelopmentStorage=true`).
+By default, the application uses **in-memory storage** for development and testing, so no additional setup is required.
 
 To use an actual Azure Storage Account:
+
 1. Create an Azure Storage Account in the Azure Portal
 2. Copy the connection string
 3. Update the connection string in `PostalCodeLookup/appsettings.json`:
@@ -42,6 +58,15 @@ To use an actual Azure Storage Account:
 Or use environment variables:
 ```bash
 export ConnectionStrings__AzureTableStorage="YOUR_CONNECTION_STRING"
+```
+
+Or use Azure Storage Emulator/Azurite:
+```json
+{
+  "ConnectionStrings": {
+    "AzureTableStorage": "UseDevelopmentStorage=true"
+  }
+}
 ```
 
 ### 3. Run the application
@@ -65,14 +90,16 @@ The application will be available at `https://localhost:5001` or `http://localho
 ```
 PostalCodeLookup/
 ├── Models/
-│   └── PostalCodeEntity.cs       # Azure Table Storage entity
+│   └── PostalCodeEntity.cs            # Azure Table Storage entity
 ├── Services/
-│   └── PostalCodeService.cs      # Service for postal code operations
+│   ├── IPostalCodeService.cs          # Service interface
+│   ├── PostalCodeService.cs           # Azure Table Storage implementation
+│   └── InMemoryPostalCodeService.cs   # In-memory implementation
 ├── Pages/
-│   ├── Index.cshtml              # Main page with postal code lookup UI
-│   └── Index.cshtml.cs           # Page model with search handler
-├── Program.cs                     # Application entry point
-└── appsettings.json              # Configuration including connection string
+│   ├── Index.cshtml                   # Main page with postal code lookup UI
+│   └── Index.cshtml.cs                # Page model with search handler
+├── Program.cs                          # Application entry point
+└── appsettings.json                   # Configuration including connection string
 ```
 
 ## Sample Data
@@ -89,6 +116,15 @@ The application includes sample data for the following postal codes:
 - Azure Table Storage SDK
 - Bootstrap 5 for UI
 - JavaScript for client-side interactivity
+
+## Architecture
+
+The application uses a service-based architecture:
+- **IPostalCodeService**: Interface for postal code operations
+- **PostalCodeService**: Implementation using Azure Table Storage
+- **InMemoryPostalCodeService**: Implementation using in-memory dictionary (default for development)
+
+The service is automatically selected at startup based on the connection string configuration.
 
 ## License
 
