@@ -27,6 +27,13 @@ public class IndexModel : PageModel
             return new JsonResult(new List<string>());
         }
 
+        // Validate postal code length and format (basic validation)
+        if (postalCode.Length > 10)
+        {
+            _logger.LogWarning("Postal code exceeds maximum length: {PostalCode}", postalCode);
+            return new JsonResult(new List<string>());
+        }
+
         var addresses = await _postalCodeService.GetAddressesByPostalCodeAsync(postalCode);
         return new JsonResult(addresses);
     }

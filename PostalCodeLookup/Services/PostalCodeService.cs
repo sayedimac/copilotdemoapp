@@ -31,9 +31,18 @@ public class PostalCodeService : IPostalCodeService
         {
             var addresses = new List<string>();
             
+            // Validate and sanitize postal code input
+            if (string.IsNullOrWhiteSpace(postalCode))
+            {
+                return addresses;
+            }
+            
+            // Remove any potentially dangerous characters for OData filter
+            var sanitizedPostalCode = postalCode.Replace("'", "''").Trim();
+            
             // Query for all entities with the given postal code as partition key
             await foreach (var entity in _tableClient.QueryAsync<PostalCodeEntity>(
-                filter: $"PartitionKey eq '{postalCode}'"))
+                filter: $"PartitionKey eq '{sanitizedPostalCode}'"))
             {
                 addresses.Add($"{entity.Address}, {entity.City}, {entity.State}");
             }
