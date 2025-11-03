@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = "UK Address Lookup";
+}
+
+<div class="text-center">
+    <h1 class="display-4">UK Address Lookup</h1>
+    <p class="lead">Search for addresses by entering a UK postal code</p>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="postalCodeInput" class="form-label">Postal Code</label>
+                    <input type="text" 
+                           class="form-control form-control-lg" 
+                           id="postalCodeInput" 
+                           placeholder="e.g., SW1A, M1, EC1A" 
+                           autocomplete="off">
+                    <div class="form-text">Start typing a UK postal code to filter addresses</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="addressSelect" class="form-label">Select Address</label>
+                    <select class="form-select form-select-lg" id="addressSelect" size="10">
+                        <option value="">Type a postal code to see matching addresses...</option>
+                    </select>
+                </div>
+
+                <div id="addressDetails" class="alert alert-info d-none">
+                    <h5>Selected Address:</h5>
+                    <p class="mb-1"><strong>Street:</strong> <span id="detailStreet"></span></p>
+                    <p class="mb-1"><strong>City:</strong> <span id="detailCity"></span></p>
+                    <p class="mb-1"><strong>County:</strong> <span id="detailCounty"></span></p>
+                    <p class="mb-1"><strong>Postal Code:</strong> <span id="detailPostalCode"></span></p>
+                    <p class="mb-0"><strong>Country:</strong> <span id="detailCountry"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let addressCache = [];
+
+        // Function to populate the dropdown
+        function populateAddresses(addresses) {
+            const select = $('#addressSelect');
+            select.empty();
+            
+            if (addresses.length === 0) {
+                select.append('<option value="">No addresses found</option>');
+                return;
+            }
+
+            addresses.forEach(address => {
+                const option = $('<option></option>')
+                    .val(JSON.stringify(address))
+                    .text(`${address.postalCode} - ${address.street}, ${address.city}`);
+                select.append(option);
+            });
+        }
+
+        // Function to search addresses
+        function searchAddresses(postalCode) {
+            $.ajax({
+                url: '@Url.Action("Search", "Address")',
+                type: 'GET',
+                data: { postalCode: postalCode },
+                success: function(data) {
+                    addressCache = data;
+                    populateAddresses(data);
+                },
+                error: function() {
+                    console.error('Error fetching addresses');
+                    $('#addressSelect').html('<option value="">Error loading addresses</option>');
+                }
+            });
+        }
+
+        // Event handler for postal code input
+        $('#postalCodeInput').on('input', function() {
+            const postalCode = $(this).val().trim();
+            
+            if (postalCode.length > 0) {
+                searchAddresses(postalCode);
+            } else {
+                searchAddresses('');
+            }
+            
+            // Hide address details when typing
+            $('#addressDetails').addClass('d-none');
+        });
+
+        // Event handler for address selection
+        $('#addressSelect').on('change', function() {
+            const selectedValue = $(this).val();
+            
+            if (selectedValue) {
+                const address = JSON.parse(selectedValue);
+                
+                $('#detailStreet').text(address.street);
+                $('#detailCity').text(address.city);
+                $('#detailCounty').text(address.county);
+                $('#detailPostalCode').text(address.postalCode);
+                $('#detailCountry').text(address.country);
+                
+                $('#addressDetails').removeClass('d-none');
+            } else {
+                $('#addressDetails').addClass('d-none');
+            }
+        });
+
+        // Load all addresses on page load
+        $(document).ready(function() {
+            searchAddresses('');
+        });
+    </script>
+}
