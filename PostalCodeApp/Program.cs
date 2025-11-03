@@ -5,8 +5,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Register AddressRepository
-builder.Services.AddSingleton<IAddressRepository, AddressRepository>();
+// Register AddressRepository based on configuration
+var useAzureStorage = builder.Configuration.GetValue<bool>("UseAzureTableStorage");
+if (useAzureStorage)
+{
+    builder.Services.AddSingleton<IAddressRepository, AddressRepository>();
+}
+else
+{
+    // Use in-memory repository for easier demo and testing
+    builder.Services.AddSingleton<IAddressRepository, InMemoryAddressRepository>();
+}
+
 builder.Services.AddTransient<DataSeeder>();
 
 var app = builder.Build();
